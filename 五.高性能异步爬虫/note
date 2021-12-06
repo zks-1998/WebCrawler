@@ -1,0 +1,75 @@
+高性能异步爬虫
+目的：在爬虫中使用异步实现高性能的数据爬取操作。
+
+异步爬虫的方式：
+    - 1.多线程，多进程（不建议）：
+        好处：可以为相关阻塞的操作单独开启线程或者进程，阻塞操作就可以异步执行。
+        弊端：无法无限制的开启多线程或者多进程。
+    - 2.线程池、进程池（适当的使用）：
+        好处：我们可以降低系统对进程或者线程创建和销毁的一个频率，从而很好的降低系统的开销。
+        弊端：池中线程或进程的数量是有上限。
+线程池使用：
+    1.from multiprocessing.dummy import Pool
+    2.定义一个方法def function(parm)处理数据  将处理的数据存到一个列表list中
+    3.pool = Pool(n) n线程个数
+      pool.map(function, list)  list中的每个元素将以parm的身份应用到函数中 这样就能同时处理数据了
+      pool.close()
+
+协程
+
+1.1 基本概念
+import asyncio
+
+协程函数  async def 函数名
+async def func():
+   pass
+协程对象 执行协程函数()得到的协程对象
+result = func()
+创建协程对象，内部代码不执行，如果想要运行函数内部代码，必须将协程对象交给事件循环来处理
+asyncio.run(result)
+
+1.2事件循环
+import asyncio
+
+loop = asyncio.get_event_loop() 生成或者获取一个事件循环
+loop.run_until_complete(协程对象) 将任务放到任务列表
+最新： asyncio.run(协程对象)
+
+1.3 await 挂起
+await+可等待的对象（协程对象 Future task对象）
+await必须要收到返回值才能继续执行代码
+
+1.4 task
+创建任务 asyncio.create_task(协程对象)
+创建任务列表 task_list
+挂起任务列表 await asyncio.wait(task_list, timeout=None)
+
+1.5 aiohttp 异步爬虫
+import aiohttp
+import asyncio
+
+requests模块是同步的 aiohttp是异步的
+aiohttp.ClientSession == requests
+具体用法
+①利用resquests xpath等操作获取要处理数据比如url等
+②定义功能函数处理数据
+async def download(dic):
+    content_path = './xiyouji/' + dic['title']+'.txt'
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url=dic['src'], headers=headers) as response:
+            detail_page_text = await response.text()
+            tree_s = etree.HTML(detail_page_text)
+            content_list = tree_s.xpath('//div[@class="content_txt"]/text()')
+            content_text = "\n".join(content_list)
+            with open(content_path, 'w') as fp:
+                fp.write(content_text)
+            print(dic['title'], '下载成功！')
+③主函数创建任务列表
+async def main():
+        task_list = []
+        for dic in dic_list:
+            task_list.append(asyncio.create_task(download(dic)))
+        await asyncio.wait(task_list, timeout=None)
+④执行
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())

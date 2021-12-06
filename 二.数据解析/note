@@ -1,0 +1,52 @@
+聚焦爬虫:爬取页面中指定的页面内容。
+    - 编码流程：
+        - 指定url
+        - 发起请求
+        - 获取响应数据
+        - 数据解析
+        - 持久化存储
+数据解析分类：
+    - 正则
+    - bs4
+    - xpath（***）
+
+数据解析原理
+ - 1.标签定位
+ - 2.提取标签、标签属性中储存的数据值
+
+bs4数据解析的原理
+ - 1.实例化一个BeautifulSoup对象，并且将页面源码数据加载到该对象中 soup = BeautifulSoup(page_text.text, 'lxml')
+ - 2.通过调用BeautifulSoup对象中相关的属性或者方法进行标签定位和数据提取
+      - soup.tagName:返回的是文档中第一次出现的tagName对应的标签 soup.div
+      - soup.select 层级选择器 返回一个列表 不会有文本输出 soup.select('.book-mulu ul li')
+      - soup.find
+         - soup.find('tagName') 等同于soup.div
+         - soup.find('div', class_='chapter_content').text  class_才代表类 因为class是py关键字
+         - soup.find('div',class_/id/attr='song') 属性定位
+         - soup.find_all('tagName'):返回符合要求的所有标签（列表）
+         - find_all('div')[2] 多个div 第三个div
+      - 获取标签之间的文本数据
+         - li.a.string 获取该标签下直系的文本内容
+         - li.a.text/get_text() 获取标签下的所有文本内容
+      - 获取标签中的属性值
+         - li.a['href']
+环境安装
+ - bs4
+ - lxml
+
+
+xpath解析原理
+ - 1.实例化一个etree对象，并且将被解析的源码数据加载到该对象中
+ - 2.调用etree对象中的xpath方法并结合xpath表达式进行数据的获取 xpath返回的是一个列表
+xpath表达式
+ - /：1.从根节点开始 2.表示一个层级
+ - //:1.表示多个层级  2.可以从任意位置定位
+ - 属性定位：//div[@class="song"]
+ - 索引定位 //div[@class="song"]/p[3]  索引从1开始的
+ - 取文本 /text() 返回一个列表 是标签直系的文本内容
+ - 取属性值 /@attrName 例如img/@src
+ - 局部定位要加.
+    for div in div_list:
+    src = div.xpath('.//p/strong/a/@href')[0]
+乱码处理
+ - last_name = down_name.encode('iso-8859-1').decode('utf-8')

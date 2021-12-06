@@ -1,0 +1,57 @@
+验证码识别
+反爬机制：识别验证码图片中的数据，用于模拟登陆操作。
+识别验证码的操作：
+    - 人工肉眼识别（不推荐）
+    - 第三方自动识别（推荐）
+超级鹰的使用：
+将超级鹰的类复制到本地，修改相关数据即可
+实战：识别古诗文网登录页面中的验证码。
+使用打码平台识别验证码的编码流程：
+    - 将验证码图片进行本地下载 xpath
+    - 调用平台提供的示例代码进行图片数据识别
+class Chaojiying_Client(object):
+    def __init__(self, username, password, soft_id):
+        self.username = username
+        password = password.encode('utf8')
+        self.password = md5(password).hexdigest()
+        self.soft_id = soft_id
+        self.base_params = {
+            'user': self.username,
+            'pass2': self.password,
+            'softid': self.soft_id,
+        }
+        self.headers = {
+            'Connection': 'Keep-Alive',
+            'User-Agent': 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0)',
+        }
+
+    def PostPic(self, im, codetype):
+        """
+        im: 图片字节
+        codetype: 题目类型 参考 http://www.chaojiying.com/price.html
+        """
+        params = {
+            'codetype': codetype,
+        }
+        params.update(self.base_params)
+        files = {'userfile': ('ccc.jpg', im)}
+        r = requests.post('http://upload.chaojiying.net/Upload/Processing.php', data=params, files=files,
+                          headers=self.headers)
+        return r.json()
+
+    def ReportError(self, im_id):
+        """
+        im_id:报错题目的图片ID
+        """
+        params = {
+            'id': im_id,
+        }
+        params.update(self.base_params)
+        r = requests.post('http://upload.chaojiying.net/Upload/ReportError.php', data=params, headers=self.headers)
+        return r.json()
+
+1..使用超级鹰将本地验证码读取出来
+chaojiying = Chaojiying_Client('1355776458', 'zks1355776458', '920974')
+im = open('./code.jpg', 'rb').read()
+result = chaojiying.PostPic(im, 1004)['pic_str']
+print(result)
